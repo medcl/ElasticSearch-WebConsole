@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+ <HEAD>
+  <TITLE>ElasticSearch Monitor Console</TITLE>
+  <META NAME="Generator" CONTENT="EditPlus">
+  <META NAME="Author" CONTENT="">
+  <META NAME="Keywords" CONTENT="">
+  <META NAME="Description" CONTENT="">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script> 
+  <link type="text/css" href="http://jqueryui.com/themes/base/jquery.ui.all.css" rel="stylesheet" /> 
+<style>
+ body{font-size:12px;}
+.box{border:1px solid #ccc;}
+.status_green{background:url(img/flag1_16x16.gif) top left no-repeat;width:16px;height:16px;}
+.status_red{background:url(img/flag2_16x16.gif) top left no-repeat;width:16px;height:16px;}
+.status_blue{background:url(img/flag3_16x16.gif) top left no-repeat;width:16px;height:16px;}
+.status_yellow{background:url(img/flag4_16x16.gif) top left no-repeat;width:16px;height:16px;}
+
+.result { list-style:none;margin:0px;padding:0px;}
+.result li{ list-style:none;margin:0px;padding:0px;}
+.result li span{padding-left:5px;padding-right:5px;}
+.refresh{background:#000000;}
+.portlet-header a{float:right;}
+</style>
+
+ 
+ <style type="text/css"> 
+	.column { width: 500px; float: left; padding-bottom: 100px; }
+	.portlet { margin: 0 1em 1em 0; }
+	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
+	.portlet-header .ui-icon { float: right; }
+	.portlet-content { padding: 0.4em; }
+	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 50px !important; }
+	.ui-sortable-placeholder * { visibility: hidden; }
+	</style> 
+	<script type="text/javascript"> 	
+	$(function() {
+		$(".column").sortable({
+			connectWith: '.column'
+		});
+ 
+		$(".portlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all")
+			.find(".portlet-header")
+				.addClass("ui-widget-header ui-corner-all")
+				.prepend('<span class="ui-icon ui-icon-minusthick"></span>')
+				.end()
+			.find(".portlet-content");
+ 
+		$(".portlet-header .ui-icon").click(function() {
+			$(this).toggleClass("ui-icon-minusthick").toggleClass("ui-icon-plusthick");
+			$(this).parents(".portlet:first").find(".portlet-content").toggle();
+		});
+ 
+		$(".column").disableSelection();
+	});
+	</script> 
+ </HEAD>
+
+ <BODY>
+<script type="text/javascript" language="javascript">
+  <!--
+var $http_server='http://localhost:9200';
+var $refresh_time=8000;
+
+function getClusterHealth(){
+ $.ajax({
+		type: "get",
+		cache: false, 
+		url: $http_server+"/_cluster/health"+"?anticache=" + Math.floor(Math.random()*1000),
+		beforeSend: function(XMLHttpRequest){
+			$("#cluster_health").addClass("refresh");
+		},
+		success: function(data, textStatus){	
+		$("#status").addClass("status_"+data['status']);
+		$("#timed_out").text(data['timed_out']);
+		$("#number_of_nodes").text(data['number_of_nodes']);
+		$("#active_primary_shards").text(data['active_primary_shards']);
+		$("#active_shards").text(data['active_shards']);
+		$("#relocating_shards").text(data['relocating_shards']);
+		$("#initializing_shards").text(data['initializing_shards']);
+		$("#unassigned_shards").text(data['unassigned_shards']);
+		},
+		complete: function(XMLHttpRequest, textStatus){
+			$("#cluster_health").removeClass("refresh");
+		},
+		error: function(){
+			//请求出错处理
+			//alert('error');
+		}
+});
+}
+
+function getClusterNodes(){
+ $.ajax({
+		type: "get",
+		cache: false, 
+		url: $http_server+"/_cluster/state"+"?anticache=" + Math.floor(Math.random()*1000),
+		beforeSend: function(XMLHttpRequest){
+			$("#cluster_nodes").addClass("refresh");
+		},
+		success: function(data, textStatus){	
+		
+		    $("#cluster_name").text(data['cluster_name']);
+		    $("#master_node").text(data['master_node']);
+			$("#nodes").empty();
+			 var i=0;
+                $.each(data["nodes"],function(entryIndex,entry){  
+                    var html = '<li>Node '+(i++)+':<ul><span>'+ entryIndex +'</span><br/><span>'+ entry['name']+'</span><br/><span>'+entry['transport_address'] + '</span></ul></li>';                   
+                    
+					$('#nodes').append(html);  
+                }); 
+		},
+		complete: function(XMLHttpRequest, textStatus){
+			$("#cluster_nodes").removeClass("refresh");
+		},
+		error: function(){
+			//请求出错处理
+			//alert('error');
+		}
+});
+}
+
+
+function getClusterStatus(){
+ $.ajax({
+		type: "get",
+		cache: false, 
+		url: $http_server+"/_status"+"?anticache=" + Math.floor(Math.random()*1000),
+		beforeSend: function(XMLHttpRequest){			
+			$("#cluster_status").addClass("refresh");
+		},
+		success: function(data, textStatus){	
+			 //$("#cluster_status").html("");
+			 $("#cluster_status").empty();
+			 var  html='<li>Shards :<ul>total:<span>'+ data["_shards"]['total']+'</span><br/>successful:<span>'+  data["_shards"]['successful']+'</span><br/>failed:<span>'+ data["_shards"]['failed'] + '</span></ul></li><li id=cluster_indices>Indices <span id=indices_count></span>:</li>';
+			 $('#cluster_status').append(html);  
+
+			 var i=0;
+                $.each(data["indices"],function(entryIndex,entry){ 
+				//var html='<li>name:<span></span></li>'
+                    var html = '<li>['+(i++)+']'+entryIndex+':<ul>';
+					html+='<span>store_size:'+ entry['store_size'] +'</span><br/><span>translog_operations:'+ entry['translog_operations']+'</span><br/><span>num_docs:'+entry['docs']['num_docs'] + '/deleted_docs:'+'/max_doc:'+entry['docs']['max_doc']+'</span><br/><span>index.number_of_replicas:'+entry['settings']['index.number_of_replicas']+'/index.number_of_shards:'+entry['settings']['index.number_of_shards']+'</span></ul></li>';                   
+                    
+					$('#cluster_indices').append(html);  
+                });
+			$('#indices_count').text('['+i+']');	
+		},
+		complete: function(XMLHttpRequest, textStatus){	
+			$("#cluster_status").removeClass("refresh");
+		},
+		error: function(){
+			//请求出错处理
+			//alert('error');
+		}
+});
+}
+
+
+function refresh(){
+getClusterHealth();
+getClusterNodes();
+getClusterStatus();
+}
+
+setInterval(refresh,$refresh_time);
+  //-->
+  </SCRIPT>
+
+  <div class="portlets"> 
+ 
+<div class="column"> 
+ 
+	<div class="portlet"> 
+		<div class="portlet-header">Health <a href="#" onclick="getClusterHealth()" >Refresh</a></div> 
+		<div class="portlet-content">
+		<ul class="result" id="cluster_health">
+		<li >cluster_health:<em id="status"></em></li>
+		<li >timed_out:<span id="timed_out"></span></li>
+		<li >number_of_nodes:<span id="number_of_nodes"></span></li>
+		<li >active_primary_shards:<span id="active_primary_shards"></span></li>
+		<li >active_shards:<span id="active_shards"></span></li>
+		<li >relocating_shards:<span id="relocating_shards"></span></li>
+		<li >initializing_shards:<span id="initializing_shards"></span></li>
+		<li >unassigned_shards:<span id="unassigned_shards"></span></li>
+</ul>
+</div> 
+	</div> 
+	
+	<div class="portlet"> 
+		<div class="portlet-header">Nodes<a href="#" onclick="getClusterNodes()" >Refresh</a></div> 
+		<div class="portlet-content">
+		<ul class="result" id="cluster_nodes">
+		<li >shards_info:<span id="cluster_shard"></span></li>
+		<li >master_node:<span id="master_node"></span></li>
+		<ul id="nodes">Nodes
+		<ul>
+		</ul>
+		</div> 
+	</div> 
+ 
+</div> 
+ 
+<div class="column"> 
+ 
+	<div class="portlet"> 
+		<div class="portlet-header">Status<a href="#" onclick="getClusterStatus()" >Refresh</a></div> 
+		<div class="portlet-content">
+		<ul class="result" id="cluster_status">	
+		</ul>
+</div> 
+	</div> 
+ 
+</div> 
+ 
+</div>
+ </BODY>
+</HTML>
