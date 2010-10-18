@@ -19,15 +19,12 @@
 
 .result { list-style:none;margin:0px;padding:0px;}
 .result li{ list-style:none;margin:0px;padding:0px;}
-.result li span{padding-left:5px;padding-right:5px;}
+.result li span{padding-left:15px;padding-right:5px;font-family:'verdana'}
 .refresh{background:#000000;}
 .portlet-header a{float:right;}
-b{font-size:13px;font-weight:100;}
+b{font-size:13px;font-weight:100;font-family:arial;}
 #floater{}
-</style>
-
  
- <style type="text/css"> 
 	.column { width: 500px; float: left; padding-bottom: 100px; }
 	.portlet { margin: 0 1em 1em 0; }
 	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
@@ -36,27 +33,6 @@ b{font-size:13px;font-weight:100;}
 	.ui-sortable-placeholder { border: 1px dotted black; visibility: visible !important; height: 50px !important; }
 	.ui-sortable-placeholder * { visibility: hidden; }
 	</style> 
-	<script type="text/javascript"> 	
-	$(function() {
-		$(".column").sortable({
-			connectWith: '.column'
-		});
- 
-		$(".portlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all")
-			.find(".portlet-header")
-				.addClass("ui-widget-header ui-corner-all")
-				.prepend('<span class="ui-icon ui-icon-minusthick"></span>')
-				.end()
-			.find(".portlet-content");
- 
-		$(".portlet-header .ui-icon").click(function() {
-			$(this).toggleClass("ui-icon-minusthick").toggleClass("ui-icon-plusthick");
-			$(this).parents(".portlet:first").find(".portlet-content").toggle();
-		});
- 
-		$(".column").disableSelection();
-	});
-	</script> 
  </HEAD>
 
  <BODY>
@@ -120,6 +96,27 @@ b{font-size:13px;font-weight:100;}
 
 <script type="text/javascript" language="javascript">
   <!--
+$(function() {
+		$(".column").sortable({
+			connectWith: '.column'
+		});
+ 
+		$(".portlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all")
+			.find(".portlet-header")
+				.addClass("ui-widget-header ui-corner-all")
+				.prepend('<span class="ui-icon ui-icon-minusthick"></span>')
+				.end()
+			.find(".portlet-content");
+ 
+		$(".portlet-header .ui-icon").click(function() {
+			$(this).toggleClass("ui-icon-minusthick").toggleClass("ui-icon-plusthick");
+			$(this).parents(".portlet:first").find(".portlet-content").toggle();
+		});
+ 
+		$(".column").disableSelection();
+	});
+
+
 var $http_server=$("#http_server").val();
 var $refresh_time=$("#refresh_time").val();;
 
@@ -132,7 +129,7 @@ function getClusterHealth(){
 			$("#cluster_health").addClass("refresh");
 		},
 		success: function(data, textStatus){	
-		$("#status").addClass("status_"+data['status']);
+		$("#status").attr('class','status_'+data['status']);
 		$("#status").html('  &nbsp;&nbsp;('+ data['status']+')');
 		$("#timed_out").text(data['timed_out']);
 		$("#number_of_nodes").text(data['number_of_nodes']);
