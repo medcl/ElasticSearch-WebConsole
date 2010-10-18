@@ -36,7 +36,7 @@ b{font-size:13px;font-weight:100;font-family:arial;}
  </HEAD>
 
  <BODY>
-TODO:list 1.cookie support 2.serverlist 3.statics 5.changes hightlight 
+TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight 
 
 <div class="portlets"> 
  
@@ -147,7 +147,7 @@ function getClusterHealth(){
 		},
 		error: function(){
 			
-			alert('on my god');
+			//alert('on my god');
 		}
 });
 }
@@ -177,7 +177,7 @@ function getClusterNodes(){
 		},
 		error: function(){
 			
-			alert('error');
+			//alert('error');
 		}
 });
 }
@@ -202,7 +202,7 @@ function getClusterStatus(){
 			 var i=0;
                 $.each(data["indices"],function(entryIndex,entry){ 
                     var html = '<li><b>['+(i++)+']'+entryIndex+':</b><ul>';
-					html+='<span><b>store_size:</b>'+ entry['store_size'] +'</span><br/><span><b>translog_operations:</b>'+ entry['translog_operations']+'</span><br/><span><b>num_docs:</b>'+entry['docs']['num_docs'] + '/<b>deleted_docs:</b>'+'/<b>max_doc:</b>'+entry['docs']['max_doc']+'</span><br/><span><b>index.number_of_replicas:</b>'+entry['settings']['index.number_of_replicas']+'/<b>index.number_of_shards:</b>'+entry['settings']['index.number_of_shards']+'</span></ul></li>';                   
+					html+='<span><b>store_size:</b>'+ entry['store_size'] +'</span><br/><span><b>translog_operations:</b>'+ entry['translog_operations']+'</span><br/><span><b>num_docs:</b>'+entry['docs']['num_docs'] + '/<b>deleted_docs:</b>'+entry['docs']['deleted_docs']+'/<b>max_doc:</b>'+entry['docs']['max_doc']+'</span><br/><span><b>index.number_of_replicas:</b>'+entry['settings']['index.number_of_replicas']+'/<b>index.number_of_shards:</b>'+entry['settings']['index.number_of_shards']+'</span></ul></li>';                   
                     
 					$('#cluster_indices').append(html);  
 					total_bytes+=entry['store_size_in_bytes'];
@@ -217,7 +217,7 @@ function getClusterStatus(){
 		},
 		error: function(){
 			
-			alert('error');
+			//alert('error');
 		}
 });
 }
@@ -229,8 +229,7 @@ getClusterNodes();
 getClusterStatus();
 }
 
-setInterval(refresh,$refresh_time);
-
+var $interval= setInterval(refresh,$refresh_time);
 
  $("#floater").dialog({ 
  bgiframe: true,
@@ -240,6 +239,9 @@ setInterval(refresh,$refresh_time);
  'CHANGE SERVER': function() {
   $http_server=$("#http_server").val();
  $refresh_time=$("#refresh_time").val();
+ clearInterval($interval);
+ $interval =setInterval(refresh,$refresh_time);
+
  }}
  }); 
 
