@@ -36,7 +36,10 @@ b{font-size:13px;font-weight:100;font-family:arial;}
  </HEAD>
 
  <BODY>
+TODO:list 1.cookie support 2.serverlist 3.statics 5.changes hightlight 
+
 <div class="portlets"> 
+ 
  
 <div class="column"> 
  
@@ -192,8 +195,9 @@ function getClusterStatus(){
 			 $("#cluster_status").empty();
 			 var  html='<li><b>Shards :</b><ul><b>total:</b><span>'+ data["_shards"]['total']+'</span><br/><b>successful:</b><span>'+ data["_shards"]['successful']+'</span><br/><b>failed:</b><span>'+ data["_shards"]['failed'] + '</span></ul></li><li id=cluster_indices><b>Indices <span id=indices_count></span>:</b></li>';
 			 $('#cluster_status').append(html);  
-
-             var total_bytes=0;
+       $('#total_doc_num').text('');
+        $('#total_bytes').text('');
+       var total_bytes=0;
 			 var total_docs=0;
 			 var i=0;
                 $.each(data["indices"],function(entryIndex,entry){ 
