@@ -1,1 +1,9 @@
 A elasticsearch cluster monitor web console
+
+1.Index statics
+  docs (num_doc,deleted_docs,max_doc)
+  translog_operations
+  
+ diskusage
+ store_size num_docs
+  
