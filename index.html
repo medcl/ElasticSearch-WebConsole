@@ -4,12 +4,16 @@
   <TITLE>ElasticSearch Monitor Console</TITLE>
   <META NAME="Generator" CONTENT="EditPlus">
   <META NAME="Author" CONTENT="medcl">
-  <META NAME="Keywords" CONTENT="">
-  <META NAME="Description" CONTENT="">
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script> 
-    <script type="text/javascript" src="scripts/jquery.ui.autocomplete.html.js"></script>
-  <link type="text/css" href="http://jqueryui.com/themes/base/jquery.ui.all.css" rel="stylesheet" /> 
+  <META NAME="Keywords" CONTENT="ElasticSearch Monitor Webconsole">
+  <META NAME="Description" CONTENT="http://bit.ly/esconsole">
+  <!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script-->
+  <!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script-->     
+  <script type="text/javascript" src="scripts/jquery.min.js"></script>
+  <script type="text/javascript" src="scripts/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="scripts/jquery.ui.autocomplete.html.js"></script>
+  <script type="text/javascript" src="scripts/jquery.cookie.js"></script>  
+  <script type="text/javascript" src="scripts/jquery.highlight.js"></script>
+  <link type="text/css" href="http://jqueryui.com/themes/base/jquery.ui.all.css" rel="stylesheet" />
 <style>
  body{font-size:12px;}
 .box{border:1px solid #ccc;}
@@ -119,14 +123,41 @@ TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight
 </style>
 <!--search-->
 
+<style>
+	.ui-autocomplete-category {
+		font-weight: bold;
+		padding: .2em .4em;
+		margin: .8em 0 .2em;
+		line-height: 1.5;
+	}
+	</style>
 
-<div class="portlets"> 
- 
- 
-<div class="column"> 
- 
-	<div class="portlet"> 
-		<div class="portlet-header">Health <a href="#" onclick="getClusterHealth()" >Refresh</a></div> 
+<!--hightlight-->
+<style type="text/css">
+.highlight {
+    background-color: #fff34d;
+    -moz-border-radius: 5px; /* FF1+ */
+    -webkit-border-radius: 5px; /* Saf3-4 */
+    border-radius: 5px; /* Opera 10.5, IE 9, Saf5, Chrome */
+    -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7); /* FF3.5+ */
+    -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7); /* Saf3.0+, Chrome */
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7); /* Opera 10.5+, IE 9.0 */
+}
+
+.highlight {
+    padding:1px 4px;
+    margin:0 -4px;
+}
+</style>
+<!--hightlight-->
+
+<div class="portlets">
+
+
+<div class="column">
+
+	<div class="portlet">
+		<div class="portlet-header">Health <a href="#" onclick="getClusterHealth()" >Refresh</a></div>
 		<div class="portlet-content">
 		<ul class="result" id="cluster_health">
 		<li ><b>cluster_health:</b><em id="status"></em></li>
@@ -141,11 +172,11 @@ TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight
 		<li ><b>total_bytes:</b><span id="total_bytes"></span></li>
 		<li ><b>total_doc_num:</b><span id="total_doc_num"></span></li>
 </ul>
-</div> 
-	</div> 
-	
-	<div class="portlet"> 
-		<div class="portlet-header">Nodes<a href="#" onclick="getClusterNodes()" >Refresh</a></div> 
+</div>
+	</div>
+
+	<div class="portlet">
+		<div class="portlet-header">Nodes<a href="#" onclick="getClusterNodes()" >Refresh</a></div>
 		<div class="portlet-content">
 		<ul class="result" id="cluster_nodes">
 		<li ><b>cluster_name:</b><span id="cluster_name"></span></li>
@@ -153,23 +184,23 @@ TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight
 		<ul id="nodes"><b>Nodes</b>
 		<ul>
 		</ul>
-		</div> 
-	</div> 
- 
-</div> 
- 
-<div class="column"> 
- 
-	<div class="portlet"> 
-		<div class="portlet-header">Status<a href="#" onclick="getClusterStatus()" >Refresh</a></div> 
+		</div>
+	</div>
+
+</div>
+
+<div class="column">
+
+	<div class="portlet">
+		<div class="portlet-header">Status<a href="#" onclick="getClusterStatus()" >Refresh</a></div>
 		<div class="portlet-content">
-		<ul class="result" id="cluster_status">	
+		<ul class="result" id="cluster_status">
 		</ul>
-</div> 
-	</div> 
- 
-</div> 
- 
+</div>
+	</div>
+
+</div>
+
 </div>
 
 <div id="floater" title="ConsoleConfig" class="portlet-header" >
@@ -182,21 +213,162 @@ TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight
 	Result:
 	<div id="log" style="height: 200px; width: 300px; overflow: auto;" class="ui-widget-content"></div>
 </div>
+
+<script language="javascript" type="text/javascript">
+//Encoding Utf8 String
+function EncodeUtf8(s1)
+{
+      var s = escape(s1);
+      var sa = s.split("%");
+      var retV ="";
+      if(sa[0] != "")
+      {
+         retV = sa[0];
+      }
+      for(var i = 1; i < sa.length; i ++)
+      {
+           if(sa[i].substring(0,1) == "u")
+           {
+               retV += Hex2Utf8(Str2Hex(sa[i].substring(1,5)));
+
+           }
+           else retV += "%" + sa[i];
+      }
+
+      return retV;
+}
+function Str2Hex(s)
+{
+      var c = "";
+      var n;
+      var ss = "0123456789ABCDEF";
+      var digS = "";
+      for(var i = 0; i < s.length; i ++)
+      {
+         c = s.charAt(i);
+         n = ss.indexOf(c);
+         digS += Dec2Dig(eval(n));
+
+      }
+      //return value;
+      return digS;
+}
+function Dec2Dig(n1)
+{
+      var s = "";
+      var n2 = 0;
+      for(var i = 0; i < 4; i++)
+      {
+         n2 = Math.pow(2,3 - i);
+         if(n1 >= n2)
+         {
+            s += '1';
+            n1 = n1 - n2;
+          }
+         else
+          s += '0';
+
+      }
+      return s;
+
+}
+function Dig2Dec(s)
+{
+      var retV = 0;
+      if(s.length == 4)
+      {
+          for(var i = 0; i < 4; i ++)
+          {
+              retV += eval(s.charAt(i)) * Math.pow(2, 3 - i);
+          }
+          return retV;
+      }
+      return -1;
+}
+function Hex2Utf8(s)
+{
+     var retS = "";
+     var tempS = "";
+     var ss = "";
+     if(s.length == 16)
+     {
+         tempS = "1110" + s.substring(0, 4);
+         tempS += "10" + s.substring(4, 10);
+         tempS += "10" + s.substring(10,16);
+         var sss = "0123456789ABCDEF";
+         for(var i = 0; i < 3; i ++)
+         {
+            retS += "%";
+            ss = tempS.substring(i * 8, (eval(i)+1)*8);
+
+
+
+            retS += sss.charAt(Dig2Dec(ss.substring(0,4)));
+            retS += sss.charAt(Dig2Dec(ss.substring(4,8)));
+         }
+         return retS;
+     }
+     return "";
+}
+</script>
+
 <script type="text/javascript" language="javascript">
   <!--
+//golbal variable
 var $http_server=$("#http_server").val();
 var $refresh_time=$("#refresh_time").val();
-
+var $search_result_limit=50;
 
 //message logging
-	function log( message ) {
+function log( message ) {
+            var tick = new Date();
+                                       var hours = tick.getHours() < 10 ? '0' + tick.getHours() : tick.getHours();
+                                       var minutes = tick.getMinutes() < 10 ? '0' + tick.getMinutes() : tick.getMinutes();
+                                       var seconds = tick.getSeconds() < 10 ? '0' + tick.getSeconds() : tick.getSeconds();
+                                       var milseconds = tick.getMilliseconds() < 10 ? '0' + tick.getMilliseconds() : tick.getMilliseconds();
+            message=  hours+":"+minutes+":"+seconds+"."+milseconds+" "+message;
 			$( "<div/>" ).text( message ).prependTo( "#log" );
 			$( "#log" ).attr( "scrollTop", 0 );
 		}
 
+//loading config
+function loadingConfig(){
+var temp1= $.cookie('http_server');
+ if(temp1){
+ $("#http_server").val(temp1);
+ $http_server=temp1;
+ log("loading config http_server: "+temp1); 
+}
+var temp2= $.cookie('refresh_time');
+ if(temp2){
+ $("#refresh_time").val(temp2);
+ $refresh_time=temp2;
+ log("loading config refresh_time: "+temp2);
+}
+}
   
   
 $(function() {
+
+//initial configs
+loadingConfig();
+refresh();
+
+
+ $('#search').bind('keyup change', function(ev) {
+//        // pull in the new value
+//        var searchTerm = $(this).val();
+//
+//        // remove any old highlighted terms
+//        $('body').removeHighlight();
+//
+//        // disable highlighting if empty
+//        if ( searchTerm ) {
+//            // highlight the new term
+//            $('body').highlight( searchTerm );
+//        }
+    });
+
 	//	$(".column").sortable({
 			//connectWith: '.column'
 	//	});
@@ -221,13 +393,13 @@ $(function() {
 			source: function( request, response ) {
 			var elastic_search_url = $http_server+"/_search";
 				$.ajax({
-					url: elastic_search_url+"?q="+request.term,
+					url: elastic_search_url+"?q="+EncodeUtf8(request.term)+"&size="+$search_result_limit,
 					dataType: "jsonp",
 					success: function( data ) {
 						response( $.map( data.hits.hits, function( item ) {
 							return {
-								label: '<p><strong>' + item._source.title    + '</strong>' +
-								       ' <em>'       + item._source.category + '</em>'     + '</p>' +
+								label: '<p><strong>' + item._source.Name    + '</strong>' +
+								       ' <em>'       + item._source.Email + '</em>'     + '</p>' +
 								       '<p><small>'  + item._index      + '</small>/'+
 								       '<small>'  + item._type      + '</small>/'+
 								       '<small>'  + item._id      + '</small></p>',
@@ -243,7 +415,7 @@ $(function() {
         event.preventDefault();
 			  ui.item ? document.location.href = ui.item.value : null;
 			},
-			open: function() {
+			open: function(event, ui) {
 				$( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
 			},
 			close: function() {
@@ -253,7 +425,21 @@ $(function() {
 						log( ui.item ?
 							"Selected: " + ui.item.value + ", geonameId: " + ui.item.id :
 							"Nothing selected, input was " + this.value );
-					}
+					},
+					_renderMenu: function( ul, items ) {
+                        log("rendering menu.");
+			var self = this,
+				currentCategory = "";
+			$.each( items, function( index, item ) {
+				if ( item.category != currentCategory ) {
+					ul.append( "<li class='ui-autocomplete-category'>" + item._index + "</li>" );
+					currentCategory = item.category;
+				}
+				self._renderItem( ul, item );
+			});
+                        log("as");
+                        ul.highlight(ui.item.value);
+		}
 		});
 //search end
 		
@@ -366,6 +552,7 @@ function refresh(){
 getClusterHealth();
 getClusterNodes();
 getClusterStatus();
+log("refresh all status finished")
 }
 
 var $interval= setInterval(refresh,$refresh_time);
@@ -381,6 +568,10 @@ var $interval= setInterval(refresh,$refresh_time);
  clearInterval($interval);
  $interval =setInterval(refresh,$refresh_time);
 
+$.cookie("http_server",$http_server);
+$.cookie("refresh_time",$refresh_time);
+log("config saved,http_server:"+$http_server);
+log("config saved,refresh_time:"+$refresh_time);
  }}
  }); 
 
