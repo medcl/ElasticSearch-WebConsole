@@ -175,14 +175,25 @@ TODO:list 1.cookie support 2.serverlist 3.statics 5.changes highlight
 <div id="floater" title="ConsoleConfig" class="portlet-header" >
 <label for="http_server">ElasticSearch Server</label> <br/><input type="text" name="http_server" id="http_server" class="text ui-widget-content ui-corner-all" value="http://localhost:9200" /> 
 <br/>
-<label for="refresh_time">Refresh Interval</label> <br/><input type="text" name="refresh_time" id="refresh_time" class="text ui-widget-content ui-corner-all" value="8000" /> 
+<label for="refresh_time">Refresh Interval</label> <br/><input type="text" name="refresh_time" id="refresh_time" class="text ui-widget-content ui-corner-all" value="80000" /> 
 </div> 
 
-
+<div class="ui-widget" style="margin-top:2em; font-family:Arial">
+	Result:
+	<div id="log" style="height: 200px; width: 300px; overflow: auto;" class="ui-widget-content"></div>
+</div>
 <script type="text/javascript" language="javascript">
   <!--
 var $http_server=$("#http_server").val();
 var $refresh_time=$("#refresh_time").val();
+
+
+//message logging
+	function log( message ) {
+			$( "<div/>" ).text( message ).prependTo( "#log" );
+			$( "#log" ).attr( "scrollTop", 0 );
+		}
+
   
   
 $(function() {
@@ -226,7 +237,7 @@ $(function() {
 					}
 				});
 			},
-			minLength: 2,
+			minLength: 1,
 			html: true,
 			select: function( event, ui ) {
         event.preventDefault();
@@ -237,7 +248,12 @@ $(function() {
 			},
 			close: function() {
 				$( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-			}
+			},
+			select: function( event, ui ) {
+						log( ui.item ?
+							"Selected: " + ui.item.value + ", geonameId: " + ui.item.id :
+							"Nothing selected, input was " + this.value );
+					}
 		});
 //search end
 		
